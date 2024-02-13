@@ -1,0 +1,61 @@
+#!/bin/bash
+
+#This script assumes that:
+#    1) you have pdflatex installed
+#    2) you have a template.tex file to generate the pdf image 1
+#
+#It takes as input the path to a .tex image add it to the template, compiles it and removes the intermediate files
+#
+# To make the script executable use: 
+#	chmod u+x script_tex_to_pdf 
+#
+#To run the script, use:
+#	./script_tex_to_pdf  path_figure.tex
+#
+
+# Check if the correct number of arguments is provided
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 path_figure.tex"
+    exit 1
+fi
+
+# Get the input figure path
+FIGUREINPUT="$1"
+
+# Ensure the input is a .tex file
+if [[ ! "$FIGUREINPUT" =~ \.tex$ ]]; then
+    echo "Error: Input should be a .tex file"
+    exit 1
+fi
+
+#Put template in a buffer file
+cp -v template_tex_to_pdf.tex temp.tex
+
+# Read buffurized template file
+template="temp.tex"
+
+# Replace FIGUREINPUT in template with tex file path 
+sed -i='' "s/FIGUREINPUT/$FIGUREINPUT/g" $template
+
+# Compile using pdflatex
+echo "Start Image Compilation"
+touch log.txt
+pdflatex $template > log.txt
+
+echo "Remove Buffer and Auxiliary Files"
+# Remove auxilary files 
+rm -f temp.aux temp.log temp.nav temp.out temp.snm temp.toc temp.vrb temp.bbl temp.blg temp.idx temp.lof temp.lot temp.acn
+
+# Remove buffurized template file 
+rm -f $template 
+rm -f temp.tex=
+
+#Remove log file for latexmk execution
+rm log.txt
+
+# Rename PDF to input tex file name
+pdf_file=`echo $FIGUREINPUT | sed 's/.tex/.pdf/'`
+mv temp.pdf $pdf_file
+
+echo " Done !"
+
